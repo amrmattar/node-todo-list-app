@@ -1,48 +1,80 @@
-const express = require('express')
-const Task = require('../models/task')
-const router = new express.Router()
+const express = require("express");
+const Task = require("../models/task");
+const router = new express.Router();
 
-router.post('/tasks', async (req, res) => {
-    const task = new Task(req.body)
-    try {
-        await task.save()
-        res.status(201).send(task)
-    } catch (e) {
-        res.status(400).send(e)
+router.post("/tasks", async (req, res) => {
+  try {
+    const task = new Task({
+      title: req.body.title,
+      description: req.body.description,
+      searchable: `${req.body.title} ${req.body.description}`,
+    });
+    await task.save();
+    res.status(201).send(task);
+  } catch (e) {
+    res.status(400).send(e);
+  }
+});
+
+router.get("/tasks", async (req, res) => {
+  const search = req.query.search;
+  console.log(search);
+  try {
+    if (!search) {
+      const tasks = await Task.find({});
+      if (!tasks) {
+        return res.status(404).send({
+          message: "There is no Tasks yet",
+        });
+      }
+      return res.send(tasks);
     }
-})
-
-router.get('/tasks', async (req, res) => {
-    try {
-        const tasks = await Task.find({})
-        res.send(tasks)
-    } catch (e) {
-        res.status(500).send()
+    console.log(await Task.collection.getIndexes());
+    const task = await Task.find(
+      { $text: { $search: search } },
+      { score: { $meta: "textScore" } }
+    ).sort({ score: { $meta: "textScore" } });
+    if (!task) {
+      return res.status(404).send({
+          message:"There is no relvant Tasks for the search"
+      });
     }
-})
+    res.send(task);
+  } catch (e) {
+    res.status(500).send(e);
+  }
+});
 
-router.patch('/tasks/:id', async (req, res) => {
-    try {
-        const task = await Task.findByIdAndUpdate({ _id: req.params.id },  req.body, { new: true, runValidators: true })
-        if (!task) {
-            return res.status(404).send()
-        }
-        res.send(task)
-    } catch (e) {
-        res.status(400).send(e)
+router.patch("/tasks/:id", async (req, res) => {
+  try {
+    const task = await Task.findByIdAndUpdate(
+      { _id: req.params.id },
+      {
+        title: req.body.title,
+        description: req.body.description,
+        searchable: `${req.body.title} ${req.body.description}`,
+      },
+      { new: true, runValidators: true }
+    );
+    if (!task) {
+      return res.status(404).send();
     }
-})
+    res.send(task);
+  } catch (e) {
+    res.status(400).send(e);
+  }
+});
 
-router.delete('/tasks/:id', async (req, res) => {
-    try {
-        const task = await Task.findByIdAndDelete(req.params.id)
-        if (!task) {
-            return res.status(404).send()
-        }
-        res.send(task)
-    } catch (e) {
-        res.status(500).send()
+router.delete("/tasks/:id", async (req, res) => {
+  try {
+    const task = await Task.findByIdAndDelete(req.params.id);
+    if (!task) {
+      return res.status(404).send();
     }
-})
+    res.send(task);
+  } catch (e) {
+    res.status(500).send();
+  }
+});
 
-module.exports = router
+module.exports = router;
