@@ -34,7 +34,7 @@ router.get("/tasks", async (req, res) => {
     ).sort({ score: { $meta: "textScore" } });
     if (!task) {
       return res.status(404).send({
-          message:"There is no relvant Tasks for the search"
+          message:"There is no relvant tasks for the search"
       });
     }
     res.send(task);
@@ -70,12 +70,12 @@ router.delete("/tasks/:id", async (req, res) => {
     const task = await Task.findByIdAndDelete(req.params.id);
     if (!task) {
       return res.status(404).send({
-          message: "There is no Task to remove",
+          message: "there is no task to remove",
         });
     }
     res.send(task);
   } catch (e) {
-    res.status(500).send();
+    res.status(500).send(e);
   }
 });
 
