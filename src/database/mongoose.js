@@ -1,6 +1,13 @@
-const mongoose = require('mongoose')
+const mongoose = require("mongoose");
 
-mongoose.connect('mongodb://127.0.0.1:27017/todo-list-api', {
+mongoose
+  .connect(process.env.MONGODB_URL, {
     useNewUrlParser: true,
-    useUnifiedTopology: true
-})
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("Database Connected successfully");
+  })
+  .catch((err) => {
+    console.log("Connection to database Failed ", err);
+  });
