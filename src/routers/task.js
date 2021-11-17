@@ -18,7 +18,6 @@ router.post("/tasks", async (req, res) => {
 
 router.get("/tasks", async (req, res) => {
   const search = req.query.search;
-  console.log(search);
   try {
     if (!search) {
       const tasks = await Task.find({});
@@ -29,7 +28,6 @@ router.get("/tasks", async (req, res) => {
       }
       return res.send(tasks);
     }
-    console.log(await Task.collection.getIndexes());
     const task = await Task.find(
       { $text: { $search: search } },
       { score: { $meta: "textScore" } }
@@ -57,7 +55,9 @@ router.patch("/tasks/:id", async (req, res) => {
       { new: true, runValidators: true }
     );
     if (!task) {
-      return res.status(404).send();
+      return res.status(404).send({
+          message: "There is no Task to edit",
+        });
     }
     res.send(task);
   } catch (e) {
@@ -69,7 +69,9 @@ router.delete("/tasks/:id", async (req, res) => {
   try {
     const task = await Task.findByIdAndDelete(req.params.id);
     if (!task) {
-      return res.status(404).send();
+      return res.status(404).send({
+          message: "There is no Task to remove",
+        });
     }
     res.send(task);
   } catch (e) {
